@@ -3732,7 +3732,7 @@
   ygopro.stoc_follow('HS_PLAYER_CHANGE', true, async function(buffer, info, client, server, datas) {
     var is_ready, j, len, p1, p2, player, pos, possibly_max_player, ref, room;
     room = ROOM_all[client.rid];
-    if (!(room && client.pos === 0)) {
+    if (!(room && client.is_host === true || client.pos === 0)) {
       return;
     }
     pos = info.status >> 4;
