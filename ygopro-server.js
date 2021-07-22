@@ -894,6 +894,31 @@
     await dataManager.randomDuelPlayerFlee(name);
   };
 
+  const requestPromise = (name, pass) => new Promise((resolve, reject) => {
+    request.post({
+      url: "https://test-rate.herokuapp.com/users",
+      form: {
+        name: name,
+        password: pass
+      }
+    }, (error, response, body) => {
+      if (error) {
+        log.warn('RANDOM SCORE POST ERROR', error);
+      } else {
+        if (response.statusCode !== 204 && response.statusCode !== 200) {
+          log.warn('RANDOM SCORE POST FAIL', response.statusCode, response.statusMessage, body)
+        } else {
+          resolve(body);
+        }
+      }
+    });
+  });
+
+  User_authentication = global.User_authentication = async function(name,pass) {
+    return await requestPromise(name, pass);
+  }
+
+
   ROOM_player_get_score = global.ROOM_player_get_score = async function(player) {
     if (!settings.modules.mysql.enabled) {
       return "";
@@ -907,7 +932,10 @@
     if (settings.modules.windbot.enabled && (uname.slice(0, 2) === 'AI' || (!settings.modules.random_duel.enabled && uname === ''))) {
       return ROOM_find_or_create_ai(name);
     }
-    if (settings.modules.random_duel.enabled && (uname === '' || uname === 'S' || uname === 'M' || uname === 'T')) {
+    if (settings.modules.random_duel.enabled && (settings.modules.random_duel.post_user_datas || (uname === '' || uname === 'S' || uname === 'M' || uname === 'T'))) {
+      if (settings.modules.random_duel.post_user_datas) {
+	uname = "";
+      }
       return (await ROOM_find_or_create_random(uname, player_ip));
     }
     if (room = ROOM_find_by_name(name)) {
@@ -1823,7 +1851,7 @@
         }
         score_array.push(score_form);
       }
-      if (settings.modules.random_duel.record_match_scores && this.random_type === 'M') {
+      if (settings.modules.random_duel.record_match_scores && (settings.modules.random_duel.post_user_datas || this.random_type === 'M')) {
         if (score_array.length === 2) {
           if (score_array[0].score !== score_array[1].score) {
             if (score_array[0].score > score_array[1].score) {
@@ -2171,7 +2199,7 @@
             this.scores[client.name_vpass] = -9;
             if (this.random_type && !client.flee_free && (!settings.modules.reconnect.enabled || this.get_disconnected_count() === 0)) {
               ROOM_ban_player(client.name, client.ip, "${random_ban_reason_flee}");
-              if (settings.modules.random_duel.record_match_scores && this.random_type === 'M') {
+              if (settings.modules.random_duel.record_match_scores && (settings.modules.random_duel.post_user_datas || this.random_type === 'M')) {
                 ROOM_player_flee(client.name_vpass);
               }
             }
@@ -2694,11 +2722,18 @@
   });
 
   ygopro.ctos_follow('JOIN_GAME', true, async function(buffer, info, client, server, datas) {
-    var available_logs, check_buffer_indentity, create_room_with_action, duelLog, exactBan, index, j, l, len, len1, name, pre_room, recover_match, replay, replay_id, replays, room, struct;
+    var result, available_logs, check_buffer_indentity, create_room_with_action, duelLog, exactBan, index, j, l, len, len1, name, pre_room, recover_match, replay, replay_id, replays, room, struct;
     //log.info info
     info.pass = info.pass.trim();
     client.pass = info.pass;
-    if (CLIENT_is_able_to_reconnect(client) || CLIENT_is_able_to_kick_reconnect(client)) {
+    if (settings.modules.random_duel.post_user_datas){
+      result = await User_authentication(client.name_vpass, info.pass);
+    } else {
+      result = "true";
+    }
+    if (result != "true") {
+      ygopro.stoc_die(client, "ユーザー名、またはパスワードが違います");
+    } else if (CLIENT_is_able_to_reconnect(client) || CLIENT_is_able_to_kick_reconnect(client)) {
       CLIENT_pre_reconnect(client);
       return;
     } else if (settings.modules.stop) {
@@ -3185,7 +3220,7 @@
       });
     }
     //client.score_shown = true
-    if (settings.modules.random_duel.record_match_scores && room.random_type === 'M') {
+    if (settings.modules.random_duel.record_match_scores && (settings.modules.random_duel.post_user_datas || room.random_type === 'M')) {
       ygopro.stoc_send_chat_to_room(room, (await ROOM_player_get_score(client)), ygopro.constants.COLORS.GREEN);
       ref = room.players;
       for (j = 0, len = ref.length; j < len; j++) {
@@ -4061,7 +4096,7 @@
     if (room.duel_stage === ygopro.constants.DUEL_STAGE.BEGIN || room.hostinfo.mode === 2) {
       return true;
     }
-    if (room.random_type && room.turn < 3 && !client.flee_free && !settings.modules.test_mode.surrender_anytime && !(room.random_type === 'M' && settings.modules.random_duel.record_match_scores)) {
+    if (room.random_type && room.turn < 3 && !client.flee_free && !settings.modules.test_mode.surrender_anytime && !((settings.modules.random_duel.post_user_datas || room.random_type === 'M') && settings.modules.random_duel.record_match_scores)) {
       ygopro.stoc_send_chat(client, "${surrender_denied}", ygopro.constants.COLORS.BABYBLUE);
       return true;
     }

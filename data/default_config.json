@@ -80,7 +80,8 @@
         "T": false
       },
       "ready_time": 20,
-      "hang_timeout": 90
+      "hang_timeout": 90,
+      "post_user_datas": false
     },
     "mysql": {
       "enabled": false,
