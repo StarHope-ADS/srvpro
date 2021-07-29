@@ -1837,7 +1837,7 @@
       }
     }
 
-    delete() {
+    async delete() {
       var end_time, formatted_replays, index, j, len, log_rep_id, name, player_datas, recorder_buffer, ref, ref1, repbuf, replay_id, room_name, score, score_array, score_form;
       if (this.deleted) {
         return;
@@ -1862,13 +1862,13 @@
         if (score_array.length === 2) {
           if (score_array[0].score !== score_array[1].score) {
             if (score_array[0].score > score_array[1].score) {
+	      await ROOM_player_rate(score_array[0].name_vpass, score_array[1].name_vpass);
               ROOM_player_win(score_array[0].name_vpass);
               ROOM_player_lose(score_array[1].name_vpass);
-	      ROOM_player_rate(score_array[0].name_vpass, score_array[1].name_vpass);
             } else {
+	      await ROOM_player_rate(score_array[1].name_vpass, score_array[0].name_vpass);
               ROOM_player_win(score_array[1].name_vpass);
               ROOM_player_lose(score_array[0].name_vpass);
-	      ROOM_player_rate(score_array[1].name_vpass, score_array[0].name_vpass);
             }
           }
         }
