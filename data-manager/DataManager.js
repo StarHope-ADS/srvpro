@@ -509,7 +509,12 @@ class DataManager {
         if (!score) {
             return `${name.split("$")[0]} \${random_score_blank}`;
         }
-        return score.getScoreText();
+	const repo = this.db.getRepository(RandomDuelScore_1.RandomDuelScore);
+        const population = await repo.createQueryBuilder().getCount();
+	const rank = await repo.createQueryBuilder()
+		    	.where('rateScore > :rateScore',{rateScore: score.rateScore})
+			.getCount() + 1;
+	return score.getScoreText(rank, population);
     }
     async randomDuelPlayerWin(name) {
         const score = await this.getOrCreateRandomDuelScore(name);
@@ -526,6 +531,17 @@ class DataManager {
         score.flee();
         await this.saveRandomDuelScore(score);
     }
+    async randomDuelPlayerRate(winner, loser) {
+        const winner_score = await this.getOrCreateRandomDuelScore(winner);
+	const loser_score = await this.getOrCreateRandomDuelScore(loser);
+    	const winner_rate = winner_score.rateScore;
+    	const loser_rate = loser_score.rateScore;
+    	winner_score.rate(winner_rate + 32 / (10 ** ((winner_rate - loser_rate) / 400) + 1));
+    	loser_score.rate(loser_rate - 32 / (10 ** ((winner_rate - loser_rate) / 400) + 1));
+	await this.saveRandomDuelScore(winner_score);
+	await this.saveRandomDuelScore(loser_score);
+    }
+
     async getRandomScoreTop10() {
         try {
             const scores = await this.db.getRepository(RandomDuelScore_1.RandomDuelScore)

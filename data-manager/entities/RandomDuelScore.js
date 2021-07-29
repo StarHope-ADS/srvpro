@@ -28,18 +28,22 @@ let RandomDuelScore = class RandomDuelScore extends CreateAndUpdateTimeBase_1.Cr
         ++this.fleeCount;
         this.lose();
     }
-    getScoreText() {
+    rate(rateScore) {
+	this.rateScore = rateScore;
+    }
+    getScoreText(rank, population) {
         const displayName = this.getDisplayName();
         const total = this.winCount + this.loseCount;
+	
         if (this.winCount < 2 && total < 3) {
-            return `${displayName} \${random_score_not_enough}`;
+            return `${displayName} ${rank}\${random_score_rank}${population}\${random_score_rate} ${this.rateScore} \${random_score_not_enough}`;
         }
         if (this.winCombo >= 2) {
-            return `\${random_score_part1}${displayName} \${random_score_part2} ${Math.ceil(this.winCount / total * 100)}\${random_score_part3} ${Math.ceil(this.fleeCount / total * 100)}\${random_score_part4_combo}${this.winCombo}\${random_score_part5_combo}`;
+            return `\${random_score_part1}${displayName} ${rank}\${random_score_rank}${population}\${random_score_rate} ${this.rateScore}\${random_score_part2} ${Math.ceil(this.winCount / total * 100)}\${random_score_part3} ${Math.ceil(this.fleeCount / total * 100)}\${random_score_part4_combo}${this.winCombo}\${random_score_part5_combo}`;
         }
         else {
             //return displayName + " 的今日战绩：胜率" + Math.ceil(this.winCount/total*100) + "%，逃跑率" + Math.ceil(this.fleeCount/total*100) + "%，" + this.winCombo + "连胜中！"
-            return `\${random_score_part1}${displayName} \${random_score_part2} ${Math.ceil(this.winCount / total * 100)}\${random_score_part3} ${Math.ceil(this.fleeCount / total * 100)}\${random_score_part4}`;
+            return `\${random_score_part1}${displayName} ${rank}\${random_score_rank}${population}\${random_score_rate} ${this.rateScore}\${random_score_part2} ${Math.ceil(this.winCount / total * 100)}\${random_score_part3} ${Math.ceil(this.fleeCount / total * 100)}\${random_score_part4}`;
         }
     }
 };
@@ -47,6 +51,11 @@ __decorate([
     typeorm_1.PrimaryColumn({ type: "varchar", length: 20 }),
     __metadata("design:type", String)
 ], RandomDuelScore.prototype, "name", void 0);
+__decorate([
+    typeorm_1.Index(),
+    typeorm_1.Column("float", { unsigned: true, default: 1500.0 }),
+    __metadata("design:type", Number)
+], RandomDuelScore.prototype, "rateScore", void 0);
 __decorate([
     typeorm_1.Index(),
     typeorm_1.Column("int", { unsigned: true, default: 0 }),

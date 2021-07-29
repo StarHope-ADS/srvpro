@@ -894,6 +894,13 @@
     await dataManager.randomDuelPlayerFlee(name);
   };
 
+  ROOM_player_rate = global.ROOM_player_rate = async function(winner, loser) {
+    if (!settings.modules.mysql.enabled) {
+      return;
+    }
+    await dataManager.randomDuelPlayerRate(winner, loser);
+  };
+
   const requestPromise = (name, pass) => new Promise((resolve, reject) => {
     request.post({
       url: "https://test-rate.herokuapp.com/users",
@@ -1857,9 +1864,11 @@
             if (score_array[0].score > score_array[1].score) {
               ROOM_player_win(score_array[0].name_vpass);
               ROOM_player_lose(score_array[1].name_vpass);
+	      ROOM_player_rate(score_array[0].name_vpass, score_array[1].name_vpass);
             } else {
               ROOM_player_win(score_array[1].name_vpass);
               ROOM_player_lose(score_array[0].name_vpass);
+	      ROOM_player_rate(score_array[1].name_vpass, score_array[0].name_vpass);
             }
           }
         }
