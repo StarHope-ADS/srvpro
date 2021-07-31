@@ -2438,7 +2438,7 @@
     server = new net.Socket();
     client.server = server;
     server.client = client;
-    client.setTimeout(2000); //连接前超时2秒
+    client.setTimeout(3000); //连接前超时1秒
     
     // 释放处理
     client.on('close', function(had_error) {
@@ -2488,7 +2488,8 @@
     });
     client.on('timeout', function() {
       if (!(settings.modules.reconnect.enabled && (disconnect_list[CLIENT_get_authorize_key(client)] || client.had_new_reconnection))) {
-        client.destroy();
+	ygopro.stoc_die(client, "ログインに失敗しました。もう一度やり直してください。");
+	client.abort();
       }
     });
     server.on('close', function(had_error) {
