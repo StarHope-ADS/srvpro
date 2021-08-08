@@ -903,7 +903,7 @@
 
   const requestPromise = (name, pass) => new Promise((resolve, reject) => {
     request.post({
-      url: "https://test-rate.herokuapp.com/users",
+      url: settings.modules.random_duel.post_user_datas,
       form: {
         name: name,
         password: pass
@@ -2438,7 +2438,7 @@
     server = new net.Socket();
     client.server = server;
     server.client = client;
-    client.setTimeout(3000); //连接前超时1秒
+    client.setTimeout(3000); //连接前超时3秒
     
     // 释放处理
     client.on('close', function(had_error) {

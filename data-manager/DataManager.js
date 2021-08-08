@@ -546,12 +546,10 @@ class DataManager {
         try {
             const scores = await this.db.getRepository(RandomDuelScore_1.RandomDuelScore)
                 .createQueryBuilder("score")
-                .orderBy("score.win", "DESC")
-                .addOrderBy("score.lose", "ASC")
-                .addOrderBy("score.flee", "ASC")
-                .limit(10)
+		.orderBy("score.rateScore", "DESC")
                 .getMany();
             return scores.map(score => [score.getDisplayName(), {
+		    rate: score.rateScore,
                     win: score.winCount,
                     lose: score.loseCount,
                     flee: score.fleeCount,
