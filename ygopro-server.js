@@ -901,30 +901,18 @@
     await dataManager.randomDuelPlayerRate(winner, loser);
   };
 
-  const requestPromise = (name, pass) => new Promise((resolve, reject) => {
-    request.post({
-      url: settings.modules.random_duel.post_user_datas,
-      form: {
-        name: name,
-        password: pass
-      }
-    }, (error, response, body) => {
-      if (error) {
-        log.warn('RANDOM SCORE POST ERROR', error);
-      } else {
-        if (response.statusCode !== 204 && response.statusCode !== 200) {
-          log.warn('RANDOM SCORE POST FAIL', response.statusCode, response.statusMessage, body)
-        } else {
-          resolve(body);
-        }
-      }
-    });
-  });
-
   User_authentication = global.User_authentication = async function(name,pass) {
-    return await requestPromise(name, pass);
+    try {
+       return (await axios.post(settings.modules.random_duel.post_user_datas, qs.stringify({
+         accesskey: settings.modules.random_duel.post_match_accesskey,
+         name: name,
+         password: pass
+       }))).data;
+    } catch (error1) {
+      e = error1
+      log.warn('RANDOM SCORE POST ERROR', e.toString());
+    }
   }
-
 
   ROOM_player_get_score = global.ROOM_player_get_score = async function(player) {
     if (!settings.modules.mysql.enabled) {
@@ -2739,9 +2727,9 @@
     if (settings.modules.random_duel.post_user_datas){
       result = await User_authentication(client.name_vpass, info.pass);
     } else {
-      result = "true";
+      result = true;
     }
-    if (result != "true") {
+    if (result != true) {
       ygopro.stoc_die(client, "ユーザー名、またはパスワードが違います");
     } else if (CLIENT_is_able_to_reconnect(client) || CLIENT_is_able_to_kick_reconnect(client)) {
       CLIENT_pre_reconnect(client);
